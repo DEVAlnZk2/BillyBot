@@ -10,11 +10,18 @@ from collections import Counter
 RESULTADO = "@resultado"
 
 
-def aplicar_variaveis(texto, conversa, nome_jogador):
-    """Troca {jogador} e as {variaveis} da conversa pelos valores reais."""
+def aplicar_variaveis(texto, conversa, nome_jogador, para_voz=False):
+    """Troca {jogador} e as {variaveis} da conversa pelos valores reais.
+
+    Com para_voz=True, valores só de dígitos (como um código de cofre) viram
+    "5, 7, 3, 0" para a voz falar número por número em vez de "cinco mil...".
+    """
     texto = texto.replace("{jogador}", nome_jogador)
     for chave, valor in conversa.get("variaveis", {}).items():
-        texto = texto.replace("{" + chave + "}", str(valor))
+        valor = str(valor)
+        if para_voz and valor.isdigit():
+            valor = ", ".join(valor)
+        texto = texto.replace("{" + chave + "}", valor)
     return texto
 
 
