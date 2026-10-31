@@ -20,4 +20,3 @@ Você começa acordando em um subsolo conhecido como Subsolo 57, localizado no c
 
 
 
-_Ass: AlnZk2 - The Wizard_ 👻
