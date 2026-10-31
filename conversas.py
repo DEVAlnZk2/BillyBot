@@ -11,6 +11,13 @@ ESTRUTURA DE UMA CONVERSA
         "descricao": "Texto da lista",   # aparece em !conversas
         "cor": 0xAABBCC,                 # cor da barra lateral
         "imagem": "https://...",         # (opcional) miniatura do NPC
+        "avatar": "imagens/arquivo.png", # (opcional) foto de perfil; link ou arquivo.
+                                         # Sem este campo, usa imagens/<comando>.png
+        "voz": {                         # (opcional) liga o TTS para este NPC
+            "nome": "pt-BR-AntonioNeural",  # veja as opções com o comando !vozes
+            "velocidade": "-20%",           # opcional: de -50% a +50%
+            "tom": "-10Hz",                 # opcional: negativo = mais grave
+        },
         "variaveis": {"chave": "valor"}, # (opcional) usadas como {chave} nos textos
         "pontuacao": {...},              # (opcional) ver "ABORDAGENS" abaixo
         "inicio": "carta1",              # nome do primeiro nó
@@ -22,6 +29,7 @@ ESTRUTURA DE UM NÓ (uma "carta" de diálogo)
     "carta1": {
         "narracao": "Descrição da cena (o TTS não vai falar).",   # opcional
         "fala": "O que o NPC diz (só isto será falado no TTS).",  # opcional
+        "fala_tts": "Mesma fala escrita como se fala.",           # opcional (pronúncia)
         "narracao_final": "Cena depois da fala.",                 # opcional
         "itens": ["Item que o jogador recebe"],                   # opcional
         "opcoes": [
@@ -69,6 +77,8 @@ CONVERSAS = {
         "npc": "Stefano Sero",
         "descricao": "Conversar com Stefano Sero, autor do bilhete do portão 57.",
         "cor": 0xC8761A,
+        "avatar": "imagens/Stefano Sero.png",
+        "voz": {"nome": "pt-BR-AntonioNeural", "velocidade": "+0%", "tom": "+0Hz"},
         "inicio": "inicio",
         "nos": {
             "inicio": {
@@ -158,6 +168,7 @@ CONVERSAS = {
         "npc": "Sobrevivente Errante",
         "descricao": "Falar com o sobrevivente que vaga pelas ruínas perto do Subsolo 57.",
         "cor": 0x5B6B4A,
+        "voz": {"nome": "pt-BR-AntonioNeural", "velocidade": "+8%", "tom": "+6Hz"},
         "inicio": "inicio",
         "nos": {
             "inicio": {
@@ -214,6 +225,8 @@ CONVERSAS = {
         "npc": "Deuzébio Barbosa",
         "descricao": "Encontrar o velho Deuzébio Barbosa, caído no portão do Subsolo 57.",
         "cor": 0xB5B09A,
+        "avatar": "imagens/Deuzébio Babosa.png",
+        "voz": {"nome": "pt-BR-AntonioNeural", "velocidade": "-22%", "tom": "-12Hz"},
         "variaveis": {"codigo_cofre": "5730"},  # troque pelo código real do cofre
         "pontuacao": {
             "empate": "normal",
@@ -517,11 +530,13 @@ CONVERSAS = {
 
 
 PADRAO_VARIAVEL = re.compile(r"\{(\w+)\}")
+PADRAO_VELOCIDADE = re.compile(r"^[+-]\d+%$")
+PADRAO_TOM = re.compile(r"^[+-]\d+Hz$")
 
 
 def _textos_do_no(no):
     """Gera (campo, texto) de tudo o que o jogador pode ler em um nó."""
-    for campo in ("narracao", "fala", "narracao_final"):
+    for campo in ("narracao", "fala", "fala_tts", "narracao_final"):
         if no.get(campo):
             yield campo, no[campo]
     for item in no.get("itens", []):
@@ -545,6 +560,16 @@ def validar_conversas():
 
         if conversa.get("inicio") not in nos:
             erros.append(f"[{chave}] o nó inicial '{conversa.get('inicio')}' não existe.")
+
+        voz = conversa.get("voz")
+        if voz is not None:
+            if not isinstance(voz, dict) or not voz.get("nome"):
+                erros.append(f"[{chave}] 'voz' precisa ser um dicionário com o campo 'nome'.")
+            else:
+                if not PADRAO_VELOCIDADE.match(voz.get("velocidade", "+0%")):
+                    erros.append(f"[{chave}] 'velocidade' deve ter o formato '-20%' ou '+10%'.")
+                if not PADRAO_TOM.match(voz.get("tom", "+0Hz")):
+                    erros.append(f"[{chave}] 'tom' deve ter o formato '-10Hz' ou '+5Hz'.")
 
         if pontuacao:
             destinos = pontuacao.get("destinos", {})
